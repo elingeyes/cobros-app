@@ -13,6 +13,7 @@ class ClienteController extends Controller
     /**
      * Listar todos los clientes
      */
+    //listar clientes
     public function index(): View
     {
         $clientes = Cliente::all();
