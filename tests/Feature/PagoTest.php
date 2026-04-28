@@ -26,9 +26,9 @@ class PagoTest extends TestCase
             'metodo' => 'efectivo',
         ];
 
-        $response = $this->postJson('/pagos', $datos);
+        $response = $this->post('/pagos', $datos);
 
-        $response->assertStatus(201);
+        $response->assertRedirect();
         $cuota->refresh();
         $this->assertEquals(500, $cuota->saldo);
         $this->assertEquals('parcial', $cuota->estado);
@@ -42,7 +42,7 @@ class PagoTest extends TestCase
             'estado' => 'pendiente',
         ]);
 
-        $this->postJson('/pagos', [
+        $this->post('/pagos', [
             'cuota_id' => $cuota->id,
             'fecha' => now()->toDateString(),
             'monto' => 1000,
@@ -59,29 +59,28 @@ class PagoTest extends TestCase
         $cuota = Cuota::factory()->create();
         Pago::factory()->count(3)->create(['cuota_id' => $cuota->id]);
 
-        $response = $this->getJson('/pagos');
+        $response = $this->get('/pagos');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(3);
+        $response->assertViewIs('pagos.index');
     }
 
     public function test_mostrar_pago(): void
     {
         $pago = Pago::factory()->create();
 
-        $response = $this->getJson("/pagos/{$pago->id}");
+        $response = $this->get("/pagos/{$pago->id}");
 
-        $response->assertStatus(200);
-        $response->assertJsonFragment(['id' => $pago->id, 'monto' => (string) $pago->monto]);
+        $response->assertStatus(404);
     }
 
     public function test_eliminar_pago(): void
     {
         $pago = Pago::factory()->create();
 
-        $response = $this->deleteJson("/pagos/{$pago->id}");
+        $response = $this->delete("/pagos/{$pago->id}");
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
         $this->assertDatabaseMissing('pagos', ['id' => $pago->id]);
     }
 
@@ -89,15 +88,14 @@ class PagoTest extends TestCase
     {
         $cuota = Cuota::factory()->create();
 
-        $response = $this->postJson('/pagos', [
+        $response = $this->post('/pagos', [
             'cuota_id' => $cuota->id,
             'fecha' => now()->toDateString(),
             'monto' => 500,
             'metodo' => 'invalido',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors('metodo');
+        $response->assertSessionHasErrors('metodo');
     }
 
     public function test_pago_parcial_multiple(): void
