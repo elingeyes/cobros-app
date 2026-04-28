@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePagoRequest;
+use App\Models\Cuota;
 use App\Models\Pago;
 use App\Services\PrestamoService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class PagoController extends Controller
 {
@@ -14,44 +16,57 @@ class PagoController extends Controller
     /**
      * Listar todos los pagos
      */
-    public function index(): JsonResponse
+    public function index(): View
     {
-        $pagos = Pago::with(['cuota.prestamo'])->get();
+        $pagos = Pago::with(['cuota.prestamo.cliente'])->get();
 
-        return response()->json($pagos);
+        return view('pagos.index', compact('pagos'));
+    }
+
+    /**
+     * Mostrar formulario de creación
+     */
+    public function create(): View
+    {
+        $cuotasPendientes = Cuota::where('estado', '!=', 'pagada')
+            ->with('prestamo.cliente')
+            ->get();
+
+        return view('pagos.create', compact('cuotasPendientes'));
     }
 
     /**
      * Mostrar un pago específico
      */
-    public function show(Pago $pago): JsonResponse
+    public function show(Pago $pago): View
     {
         $pago->load(['cuota.prestamo']);
 
-        return response()->json($pago);
+        return view('pagos.show', compact('pago'));
     }
 
     /**
      * Crear un nuevo pago y actualizar estado de cuota
      */
-    public function store(StorePagoRequest $request): JsonResponse
+    public function store(StorePagoRequest $request): RedirectResponse
     {
         $pago = Pago::create($request->validated());
         $cuota = $pago->cuota;
 
         $this->prestamoService->procesarPago($cuota, $pago->monto);
-        $pago->load(['cuota.prestamo']);
 
-        return response()->json($pago, 201);
+        return redirect()->route('cuotas.show', $cuota)
+            ->with('success', 'Pago registrado correctamente');
     }
 
     /**
      * Eliminar un pago
      */
-    public function destroy(Pago $pago): JsonResponse
+    public function destroy(Pago $pago): RedirectResponse
     {
         $pago->delete();
 
-        return response()->json(['message' => 'Pago eliminado correctamente'], 200);
+        return redirect()->route('pagos.index')
+            ->with('success', 'Pago eliminado correctamente');
     }
 }

@@ -21,10 +21,9 @@ class ClienteTest extends TestCase
             'direccion' => 'Calle Principal 123',
         ];
 
-        $response = $this->postJson('/clientes', $datos);
+        $response = $this->post('/clientes', $datos);
 
-        $response->assertStatus(201);
-        $response->assertJsonStructure(['id', 'nombre', 'apellido', 'ci', 'email']);
+        $response->assertRedirect(route('clientes.index'));
         $this->assertDatabaseHas('clientes', ['ci' => '12345678']);
     }
 
@@ -32,31 +31,37 @@ class ClienteTest extends TestCase
     {
         Cliente::factory()->count(3)->create();
 
-        $response = $this->getJson('/clientes');
+        $response = $this->get('/clientes');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(3);
+        $response->assertViewIs('clientes.index');
+        $response->assertViewHas('clientes');
     }
 
     public function test_mostrar_cliente(): void
     {
         $cliente = Cliente::factory()->create();
 
-        $response = $this->getJson("/clientes/{$cliente->id}");
+        $response = $this->get("/clientes/{$cliente->id}");
 
         $response->assertStatus(200);
-        $response->assertJsonFragment(['id' => $cliente->id, 'nombre' => $cliente->nombre]);
+        $response->assertViewIs('clientes.show');
+        $response->assertViewHas('cliente', $cliente);
     }
+
 
     public function test_actualizar_cliente(): void
     {
         $cliente = Cliente::factory()->create();
 
-        $response = $this->patchJson("/clientes/{$cliente->id}", [
+        $response = $this->put("/clientes/{$cliente->id}", [
             'nombre' => 'Carlos',
+            'apellido' => $cliente->apellido,
+            'ci' => $cliente->ci,
+            'email' => $cliente->email,
         ]);
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('clientes.show', $cliente));
         $this->assertDatabaseHas('clientes', ['id' => $cliente->id, 'nombre' => 'Carlos']);
     }
 
@@ -64,9 +69,9 @@ class ClienteTest extends TestCase
     {
         $cliente = Cliente::factory()->create();
 
-        $response = $this->deleteJson("/clientes/{$cliente->id}");
+        $response = $this->delete("/clientes/{$cliente->id}");
 
-        $response->assertStatus(200);
+        $response->assertRedirect(route('clientes.index'));
         $this->assertDatabaseMissing('clientes', ['id' => $cliente->id]);
     }
 
@@ -74,29 +79,27 @@ class ClienteTest extends TestCase
     {
         Cliente::factory()->create(['email' => 'juan@example.com']);
 
-        $response = $this->postJson('/clientes', [
+        $response = $this->post('/clientes', [
             'nombre' => 'Juan',
             'apellido' => 'Pérez',
             'ci' => '87654321',
             'email' => 'juan@example.com',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors('email');
+        $response->assertSessionHasErrors('email');
     }
 
     public function test_validar_ci_unico(): void
     {
         Cliente::factory()->create(['ci' => '12345678']);
 
-        $response = $this->postJson('/clientes', [
+        $response = $this->post('/clientes', [
             'nombre' => 'Juan',
             'apellido' => 'Pérez',
             'ci' => '12345678',
             'email' => 'juan@example.com',
         ]);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors('ci');
+        $response->assertSessionHasErrors('ci');
     }
 }

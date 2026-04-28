@@ -28,12 +28,11 @@ class PrestamoTest extends TestCase
             'fecha' => now()->toDateString(),
         ];
 
-        $response = $this->postJson('/prestamos', $datos);
+        $response = $this->post('/prestamos', $datos);
 
-        $response->assertStatus(201);
-        $response->assertJsonStructure(['id', 'cliente_id', 'tipo_prestamo_id', 'monto', 'cuotas']);
         $this->assertDatabaseHas('prestamos', ['monto' => 10000]);
-        $this->assertEquals(12, Cuota::where('prestamo_id', $response->json('id'))->count());
+        $prestamo = Prestamo::where('monto', 10000)->first();
+        $this->assertEquals(12, Cuota::where('prestamo_id', $prestamo->id)->count());
     }
 
     public function test_calcular_monto_cuota_correctamente(): void
@@ -44,7 +43,7 @@ class PrestamoTest extends TestCase
             'plazo' => 12,
         ]);
 
-        $this->postJson('/prestamos', [
+        $this->post('/prestamos', [
             'cliente_id' => $cliente->id,
             'tipo_prestamo_id' => $tipoPrestamo->id,
             'monto' => 10000,
@@ -68,10 +67,10 @@ class PrestamoTest extends TestCase
             'tipo_prestamo_id' => $tipoPrestamo->id,
         ]);
 
-        $response = $this->getJson('/prestamos');
+        $response = $this->get('/prestamos');
 
         $response->assertStatus(200);
-        $response->assertJsonCount(2);
+        $response->assertViewIs('prestamos.index');
     }
 
     public function test_mostrar_prestamo_con_cuotas(): void
@@ -89,29 +88,28 @@ class PrestamoTest extends TestCase
 
         Cuota::factory()->count(12)->create(['prestamo_id' => $prestamo->id]);
 
-        $response = $this->getJson("/prestamos/{$prestamo->id}");
+        $response = $this->get("/prestamos/{$prestamo->id}");
 
         $response->assertStatus(200);
-        $response->assertJsonStructure(['id', 'cuotas']);
+        $response->assertViewIs('prestamos.show');
     }
 
     public function test_actualizar_estado_prestamo(): void
     {
         $prestamo = Prestamo::factory()->create();
 
-        $response = $this->patchJson("/prestamos/{$prestamo->id}", [
+        $response = $this->put("/prestamos/{$prestamo->id}", [
             'estado' => 'cancelado',
         ]);
 
-        $response->assertStatus(200);
+        $response->assertRedirect();
         $this->assertDatabaseHas('prestamos', ['id' => $prestamo->id, 'estado' => 'cancelado']);
     }
 
     public function test_validar_campos_requeridos(): void
     {
-        $response = $this->postJson('/prestamos', []);
+        $response = $this->post('/prestamos', []);
 
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['cliente_id', 'tipo_prestamo_id', 'monto', 'fecha']);
+        $response->assertSessionHasErrors(['cliente_id', 'tipo_prestamo_id', 'monto', 'fecha']);
     }
 }
