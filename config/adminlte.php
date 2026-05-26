@@ -165,7 +165,7 @@ return [
     'layout_fixed_sidebar' => null,
     'layout_fixed_navbar' => null,
     'layout_fixed_footer' => null,
-    'layout_dark_mode' => null,
+    'layout_dark_mode' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -265,7 +265,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => '/',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -324,81 +324,36 @@ return [
             'text' => 'search',
         ],
         [
-            'text' => 'blog',
-            'url' => 'admin/blog',
-            'can' => 'manage-blog',
+            'text' => 'Dashboard',
+            'route'  => 'dashboard',
+            'icon' => 'fas fa-fw fa-tachometer-alt',
+        ],
+        ['header' => 'ADMINISTRACIÓN'],
+        [
+            'text' => 'Clientes',
+            'route'  => 'clientes.index',
+            'icon' => 'fas fa-fw fa-users',
         ],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'text' => 'Tipos de Préstamo',
+            'route'  => 'tipos-prestamo.index',
+            'icon' => 'fas fa-fw fa-list',
         ],
-        ['header' => 'account_settings'],
+        ['header' => 'OPERACIONES'],
         [
-            'text' => 'profile',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-user',
+            'text' => 'Préstamos',
+            'route'  => 'prestamos.index',
+            'icon' => 'fas fa-fw fa-hand-holding-usd',
         ],
         [
-            'text' => 'change_password',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-lock',
+            'text' => 'Cuotas',
+            'route'  => 'cuotas.index',
+            'icon' => 'fas fa-fw fa-calendar-alt',
         ],
         [
-            'text' => 'multilevel',
-            'icon' => 'fas fa-fw fa-share',
-            'submenu' => [
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                    'submenu' => [
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-            ],
-        ],
-        ['header' => 'labels'],
-        [
-            'text' => 'important',
-            'icon_color' => 'red',
-            'url' => '#',
-        ],
-        [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
-            'url' => '#',
-        ],
-        [
-            'text' => 'information',
-            'icon_color' => 'cyan',
-            'url' => '#',
+            'text' => 'Pagos',
+            'route'  => 'pagos.index',
+            'icon' => 'fas fa-fw fa-money-bill-wave',
         ],
     ],
 
